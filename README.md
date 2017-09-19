@@ -3,10 +3,10 @@ Tools for building and debugging with the Bilateral Transport Protocol (BTP)
 
 # <img src="./assets/spider.svg" width="25px"> Spider
 
-The BTP Spider can be configured to act as one BTP server and/or one or multiple BTP clients.
-It takes care of reconnecting clients when the server restarts, and resending BTP packets that
-were not yet responded to. It can also register a TLS certificate registration for you, or run
-on localhost.
+The BTP Spider sits like a spider in a web, between its BTP peers. It can be configured to act as one BTP
+server and/or one or multiple BTP clients. It takes care of reconnecting clients when the server restarts,
+and resending BTP packets that were not yet responded to. It can also register a TLS certificate registration
+for you, or run on localhost.
 
 You can use BTP Spider on its own, if you want to write your own code to deal with the sub-protocols
 on top of BTP, or in combination with BTP Frog and BTP Cat from this same repo, or (in the near future)
@@ -21,7 +21,7 @@ Its constructor takes three arguments:
   * `upstreams`: `<Array of Object>`
     * `url`: `<String>` The base URL of the server. Should start with either `ws://` or `wss://` and should not end in a `/`.
     * `token`: `<String>` The token for connecting to this upstream.
-  * `name`: `<String>` Required if `upstreams` is non-empty; used to determine the WebSocket URL when connecting to upstreams 
+  * `name`: `<String>` Required if `upstreams` is non-empty; used to determine the WebSocket URL when connecting to upstreams
 * connectionCallback
   * @param `peerId`: `<String>` Full URL of the WebSocket connection, e.g. `'ws://localhost:8000/name/token'`
 * messageCallback
@@ -32,7 +32,7 @@ There is one method, `send`, to send a BTP packet to one of the Spider's peers:
 * @param `obj`: `<Object>` Object that will be passed to `BtpPacket.serialize` to create the BTP packet.
 * @param `peerId`: `<String>` URL of the upstream or downstream peer to which the packet should be sent.
 * @returns `<Promise>.<null>`
- 
+
 ## Creating a local server:
 
 See `examples/localServer.js`
@@ -196,3 +196,70 @@ client1.start().then(() => {
   }, 'ws://localhost:8000/client2/asdf')
 })
 ```
+
+# <img src="./assets/frog.svg" width="25px"> Frog
+
+The BTP Frog can 'swallow' an Interledger plugin, and make it look like a BTP peer.
+
+Example usage (make sure you `npm install ilp-plugin-bells` first, for this example),
+see `example/frogGetQuote.js` for the code:
+
+```js
+const BtpPacket = require('btp-packet')
+const IlpPacket = require('ilp-packet')
+const BtpFrog = require('./src/frog')
+const PluginBells = require('ilp-plugin-bells')
+
+const plugin = new PluginBells({
+ account: 'https://red.ilpdemo.org/ledger/accounts/alice',
+ password: 'alice'
+})
+
+const frog = new BtpFrog(plugin, (obj) => {
+  obj.data.map(item => {
+    if (item.protocolName === 'ilp') {
+      console.log(IlpPacket.deserializeIlpPacket(item.data))
+    } else {
+      console.log(item.protocolName, item.data.toString('utf8'))
+    }
+  })
+  frog.stop()
+})
+frog.start().then(() => {
+  return frog.handleMessage({
+    type: BtpPacket.TYPE_MESSAGE,
+    requestId: 1,
+    data: {
+      protocolData: [ {
+        protocolName: 'ilp',
+        contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+        data: IlpPacket.serializeIlqpByDestinationRequest({
+          destinationAccount: 'de.eur.blue.bob',
+          destinationAmount: '9000000000',
+          destinationHoldDuration: 3000
+        })
+      }, {
+        protocolName: 'to',
+        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+        data: Buffer.from('us.usd.red.connie', 'ascii')
+      } ]
+    }
+  })
+})
+```
+
+This script will output a quote response from the connector on red.ilpdemo.org, like:
+
+```js
+from us.usd.red.connie
+to us.usd.red.alice
+{ type: 7,
+  typeString: 'ilqp_by_destination_response',
+ data: { sourceAmount: '10782788022', sourceHoldDuration: 5000 } }
+```
+
+You can also try the `examples/frogBellsProxy.js` script; wait for it
+to say both 'Spider started' and 'Frog started', then run `examples/frogBellsProxyTester.js`
+in a separate terminal window. It will do the same ILQP request to connie@red.ilpdemo.org.
+The JSON output is not really readable as you can see, so that's why we also added BtpCat to
+this toolbox.
