@@ -77,26 +77,28 @@ function BtpSpider (config, connectHandler, msgHandler) {
   // this.myBaseUrl
 }
 BtpSpider.prototype = {
+  getServers () {
+    // case 1: use LetsEncrypt => [https, http]
+    if (this.config.tls) {
+      this.myBaseUrl = 'wss://' + this.config.tls
+      return getLetsEncryptServers(this.config.tls)
+    }
+
+    // case 2: don't run a server => []
+    if (typeof this.config.listen !== 'number') {
+      return Promise.resolve([])
+    }
+
+    // case 3: listen without TLS on a port => [http]
+    this.myBaseUrl = 'ws://localhost:' + this.config.listen
+    const server = http.createServer((req, res) => {
+      res.end(WELCOME_TEXT)
+    })
+    return new Promise(resolve => server.listen(this.config.listen, resolve([ server ])))
+  },
+
   maybeListen () {
-    return Promise.resolve().then(() => {
-      // case 1: use LetsEncrypt => [https, http]
-      if (this.config.tls) {
-        this.myBaseUrl = 'wss://' + this.config.tls
-        return getLetsEncryptServers(this.config.tls)
-      }
-
-      // case 2: don't run a server => []
-      if (typeof this.config.listen !== 'number') {
-        return []
-      }
-
-      // case 3: listen without TLS on a port => [http]
-      this.myBaseUrl = 'ws://localhost:' + this.config.listen
-      const server = http.createServer((req, res) => {
-        res.end(WELCOME_TEXT)
-      })
-      return new Promise(resolve => server.listen(this.config.listen, resolve([ server ])))
-    }).then(servers => {
+    return this.getServers().then(servers => {
       this.serversToClose = servers
       if (servers.length) {
         this.wss = new WebSocket.Server({ server: servers[0] })
