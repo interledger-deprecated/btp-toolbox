@@ -4,6 +4,15 @@ Tools for building and debugging with the Bilateral Transport Protocol (BTP)
 # <img src="./assets/spider.svg" width="25px"> Spider
 
 The BTP Spider can be configured to act as one BTP server and/or one or multiple BTP clients.
+It takes care of reconnecting clients when the server restarts, and resending BTP packets that
+were not yet responded to. It can also register a TLS certificate registration for you, or run
+on localhost.
+
+You can use BTP Spider on its own, if you want to write your own code to deal with the sub-protocols
+on top of BTP, or in combination with BTP Frog and BTP Cat from this same repo, or (in the near future)
+in combination with [newer](://github.com/interledgerjs/ilp-plugin-virtual/pull/77)
+[versions](https://github.com/interledgerjs/ilp-plugin-payment-channel-framework/pull/21) of ilp-plugin-virtual
+and other plugins from the ILP reference stack, as and when they are switching from RPC to BTP.
 
 Its constructor takes three arguments:
 * config
@@ -124,7 +133,7 @@ const spider = new BtpSpider({ listen: 8000 }, (peerId) => {
     otherPeerId = peers[1]
   }
   if (obj.type === BtpPacket.TYPE_PREPARE) {
-    obj.data.amount++ // pocket the profit! :)
+    obj.data.amount = '' + (parseInt(obj.data.amount) + 1) // pocket the profit! :)
   }
   spider.send(obj, otherPeerId)
 })
