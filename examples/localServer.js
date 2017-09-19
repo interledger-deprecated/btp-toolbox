@@ -1,6 +1,6 @@
 const BtpSpider = require('../src/spider')
 
-localServer = new BtpSpider({
+const localServer = new BtpSpider({
   listen: 8000
 }, (peerId) => {
   console.log(`somebody connected on ${peerId}`)

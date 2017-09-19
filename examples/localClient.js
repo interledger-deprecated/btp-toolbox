@@ -1,6 +1,6 @@
 const BtpSpider = require('../src/spider')
 
-localClient = new BtpSpider({
+const localClient = new BtpSpider({
   name: 'localClient',
   upstreams: [
     {
