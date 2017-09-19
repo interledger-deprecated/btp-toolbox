@@ -34,6 +34,9 @@ There is one method, `send`, to send a BTP packet to one of the Spider's peers:
 * @returns `<Promise>.<null>`
  
 ## Creating a local server:
+
+See `examples/localServer.js`
+
 ```js
 const BtpSpider = require('./src/spider')
 localServer = new BtpSpider({
@@ -46,7 +49,10 @@ localServer = new BtpSpider({
 ```
 
 ## Creating a client:
-```sh
+
+See `examples/localServer.js`
+
+```js
 localClient = new BtpSpider({
   name: 'localClient',
   upstreams: [
@@ -114,6 +120,8 @@ This connector forwards all incoming BTP packets from one peer to another,
 taking just a tiny profit in the process. It's not meant as something actually
 useful, just an example to show you how you can use the connection callback,
 the message callback, and the send method.
+
+See `examples/superSimpleConnector.js`
 
 ```js
 const BtpPacket = require('btp-packet')
