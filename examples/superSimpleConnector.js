@@ -1,6 +1,7 @@
 const crypto = require('crypto')
 const BtpPacket = require('btp-packet')
 const BtpSpider = require('../src/spider')
+const BtpCat = require('../src/cat')
 
 let peers = []
 
@@ -8,7 +9,7 @@ const spider = new BtpSpider({ listen: 8000 }, (peerId) => {
   console.log('conn', peerId)
   peers.push(peerId)
 }, (obj, peerId) => {
-  console.log('msg', obj, peerId)
+  console.log('msg', BtpCat(obj), peerId)
   if (peers.length !== 2) {
     console.error('one-to-one connector needs exactly two peers')
     return
@@ -34,7 +35,7 @@ const client1 = new BtpSpider({
 }, (peerId) => {
   console.log(`connected to ${peerId}`)
 }, (obj, peerId) => {
-  console.log(`client 1 sees BTP packet from ${peerId}`, obj)
+  console.log(`client 1 sees BTP packet from ${peerId}`, BtpCat(obj))
 })
 
 const client2 = new BtpSpider({
@@ -48,7 +49,7 @@ const client2 = new BtpSpider({
 }, (peerId) => {
   console.log(`connected to ${peerId}`)
 }, (obj, peerId) => {
-  console.log(`client 2 sees BTP packet from ${peerId}`, obj)
+  console.log(`client 2 sees BTP packet from ${peerId}`, BtpCat(obj))
 })
 
 spider.start().then(() => {

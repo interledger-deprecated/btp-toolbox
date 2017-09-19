@@ -261,5 +261,79 @@ to us.usd.red.alice
 You can also try the `examples/frogBellsProxy.js` script; wait for it
 to say both 'Spider started' and 'Frog started', then run `examples/frogBellsProxyTester.js`
 in a separate terminal window. It will do the same ILQP request to connie@red.ilpdemo.org.
-The JSON output is not really readable as you can see, so that's why we also added BtpCat to
-this toolbox.
+
+# <img src="./assets/cat.svg" width="25px"> Cat
+
+You may already have seen BtpCat being used in the example script; it's used strictly for logging.
+It can be used to display BTP packets, and the ILP packets inside them,
+in a nice human-readable way. It's a single function that takes a JavaScript object, and
+outputs a String so that `eval(BtpCat(obj)) === obj`. Example usage:
+
+```js
+const BtpPacket = require('btp-packet')
+const IlpPacket = require('ilp-packet')
+const BtpCat = require('./src/cat')
+const chalk = require('chalk')
+
+// See https://github.com/interledgerjs/ilp-packet/pull/14
+IlpPacket.serializeIlpPacket = (json) => {
+  switch (json.type) {
+    case IlpPacket.Type.TYPE_ILP_PAYMENT: return IlpPacket.serializeIlpPayment(json.data)
+    case IlpPacket.Type.TYPE_ILQP_LIQUIDITY_REQUEST: return IlpPacket.serializeIlqpLiquidityRequest(json.data)
+    case IlpPacket.Type.TYPE_ILQP_LIQUIDITY_RESPONSE: return IlpPacket.serializeIlqpLiquidityResponse(json.data)
+    case IlpPacket.Type.TYPE_ILQP_BY_SOURCE_REQUEST: return IlpPacket.serializeIlqpBySourceRequest(json.data)
+    case IlpPacket.Type.TYPE_ILQP_BY_SOURCE_RESPONSE: return IlpPacket.serializeIlqpBySourceResponse(json.data)
+    case IlpPacket.Type.TYPE_ILQP_BY_DESTINATION_REQUEST: return IlpPacket.serializeIlqpByDestinationRequest(json.data)
+    case IlpPacket.Type.TYPE_ILQP_BY_DESTINATION_RESPONSE: return IlpPacket.serializeIlqpByDestinationResponse(json.data)
+    case IlpPacket.Type.TYPE_ILP_ERROR: return serializeIlpError(json.data)
+    default: throw new Error('JSON object has invalid type')
+  }
+}
+
+console.log(chalk.bold.green('alice sends:'), chalk.green(BtpCat({
+  type: BtpPacket.TYPE_MESSAGE,
+  requestId: 4,
+  data: [ {
+    protocolName: 'ilp',
+    contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
+    data: IlpPacket.serializeIlpPacket({
+      "type": 6,
+      "typeString": "ilqp_by_destination_request",
+      "data": {
+        "destinationAccount": "de.eur.blue.bob",
+        "destinationAmount": "9000000000",
+        "destinationHoldDuration": 3000
+      }
+    })
+  }, {
+    protocolName: 'to',
+    contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+    data: 'us.usd.red.connie'
+  } ]
+})))
+
+console.log(chalk.bold.red('alice receives:', BtpCat({
+  type: BtpPacket.TYPE_RESPONSE,
+  requestId: 4,
+  data: [ {
+    protocolName: 'from',
+    contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+    data: 'us.usd.red.connie'
+  }, {
+    protocolName: 'to',
+    contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+    data: 'us.usd.red.alice'
+  }, {
+    protocolName: 'ilp',
+    contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
+    data: IlpPacket.serializeIlpPacket({
+      "type": 7,
+      "typeString": "ilqp_by_destination_response",
+      "data": {
+        "sourceAmount": "10782788022",
+        "sourceHoldDuration": 5000
+      }
+    })
+  } ]
+})))
+```

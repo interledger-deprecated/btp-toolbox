@@ -1,6 +1,7 @@
 const BtpPacket = require('btp-packet')
 const IlpPacket = require('ilp-packet')
 const BtpFrog = require('../src/frog')
+const BtpCat = require('../src/cat')
 const PluginBells = require('ilp-plugin-bells')
 
 const plugin = new PluginBells({
@@ -9,17 +10,12 @@ const plugin = new PluginBells({
 })
 
 const frog = new BtpFrog(plugin, (obj) => {
-  obj.data.map(item => {
-    if (item.protocolName === 'ilp') {
-      console.log(IlpPacket.deserializeIlpPacket(item.data))
-    } else {
-      console.log(item.protocolName, item.data.toString('utf8'))
-    }
-  })
+  console.log('Response from Frog:', BtpCat(obj))
   frog.stop()
 })
+
 frog.start().then(() => {
-  return frog.handleMessage({
+  const request = {
     type: BtpPacket.TYPE_MESSAGE,
     requestId: 1,
     data: {
@@ -37,5 +33,7 @@ frog.start().then(() => {
         data: Buffer.from('us.usd.red.connie', 'ascii')
       } ]
     }
-  })
+  }
+  console.log('Request to Frog:', BtpCat(request))
+  return frog.handleMessage(request)
 })

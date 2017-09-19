@@ -1,6 +1,7 @@
 const BtpPacket = require('btp-packet')
 const IlpPacket = require('ilp-packet')
 const BtpSpider = require('../src/spider')
+const BtpCat = require('../src/cat')
 
 const spider = new BtpSpider({
   name: '',
@@ -30,7 +31,7 @@ const spider = new BtpSpider({
     }
   }, peerId)
 }, (obj, peerId) => {
-  console.log('Got message back from Spider', JSON.stringify(obj, null, 2))
+  console.log('Got message back from Spider', BtpCat(obj))
   spider.stop()
 })
 

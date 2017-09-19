@@ -1,4 +1,5 @@
 const BtpSpider = require('../src/spider')
+const BtpCat = require('../src/cat')
 
 const localClient = new BtpSpider({
   name: 'localClient',
@@ -11,7 +12,7 @@ const localClient = new BtpSpider({
 }, (peerId) => {
   console.log(`connected to ${peerId}`)
 }, (obj, peerId) => {
-  console.log(`client sees BTP packet from ${peerId}`, obj)
+  console.log(`client sees BTP packet from ${peerId}`, BtpCat(obj))
 })
 
 localClient.start()

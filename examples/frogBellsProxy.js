@@ -1,5 +1,6 @@
 const BtpFrog = require('../src/frog')
 const BtpSpider = require('../src/spider')
+const BtpCat = require('../src/cat')
 const PluginBells = require('ilp-plugin-bells')
 
 const plugin = new PluginBells({
@@ -11,10 +12,10 @@ let spiderPeerId
 
 const frog = new BtpFrog(plugin, (obj) => {
   if (spiderPeerId) {
-    console.log('Relaying from Frog to Spider', obj)
+    console.log('Relaying from Frog to Spider', BtpCat(obj))
     spider.send(obj, spiderPeerId)
   } else {
-    console.log('Message from Frog lost because nobody is connected to the Spider yet', obj)
+    console.log('Message from Frog lost because nobody is connected to the Spider yet', BtpCat(obj))
   }
 })
 
@@ -25,7 +26,7 @@ const spider = new BtpSpider({ listen: 8000 }, (peerId) => {
     spiderPeerId = peerId
   }
 }, (obj, peerId) => {
-  console.log('Relaying from Spider to Frog', obj)
+  console.log('Relaying from Spider to Frog', BtpCat(obj))
   frog.handleMessage(obj)
 })
 
