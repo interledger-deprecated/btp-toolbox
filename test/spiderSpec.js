@@ -118,7 +118,9 @@ describe('Spider', () => {
       }).then(() => {
         const clientReconnected = new Promise(resolve => {
           this.onConnectedToServer.push((peerId) => {
-            resolve()
+            this.client.send(this.packet2, 'ws://localhost:8000/client/asdf').then(() => {
+              return this.server.send(this.packet3, 'ws://localhost:8000/client/asdf')
+            }).then(resolve)
           })
         })
         return this.server.start().then(clientReconnected)
@@ -135,21 +137,17 @@ describe('Spider', () => {
     })
 
     it('should send to server', function (done) {
-      this.timeout(5000)
       this.onServerReceive.push((arr) => {
-        assert.deepEqual(arr, [ this.packet, 'ws://localhost:8000/client/asdf' ])
+        assert.deepEqual(arr, [ this.packet2, 'ws://localhost:8000/client/asdf' ])
         done()
       })
-      this.client.send(this.packet, 'ws://localhost:8000/client/asdf')
     })
 
     it('should send to client', function (done) {
-      this.timeout(5000)
       this.onClientReceive.push((arr) => {
-        assert.deepEqual(arr, [ this.packet, 'ws://localhost:8000/client/asdf' ])
+        assert.deepEqual(arr, [ this.packet3, 'ws://localhost:8000/client/asdf' ])
         done()
       })
-      this.server.send(this.packet, 'ws://localhost:8000/client/asdf')
     })
   })
 

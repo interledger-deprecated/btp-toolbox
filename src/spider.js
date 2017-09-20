@@ -76,6 +76,7 @@ function BtpSpider (config, connectHandler, msgHandler) {
   this.incarnations = {}
   // this.myBaseUrl
 }
+
 BtpSpider.prototype = {
   getServers () {
     // case 1: use LetsEncrypt => [https, http]
