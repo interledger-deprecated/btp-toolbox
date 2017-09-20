@@ -16,22 +16,20 @@ describe('Frog', () => {
     this.request = function (protocolName, data, to) {
       const responsePromise = new Promise(resolve => {
         this.whenFrogSends.push(obj => {
-          resolve(obj.data.protocolData)
+          resolve(obj.data)
         })
       })
       let obj = {
         type: BtpPacket.TYPE_MESSAGE,
         requestId: 1,
-        data: {
-          protocolData: [ {
-            protocolName,
-            contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
-            data
-          } ]
-        }
+        data: [ {
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
+          data
+        } ]
       }
       if (to) {
-        obj.data.protocolData.push({
+        obj.data.push({
           protocolName: 'to',
           contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
           data: to
@@ -136,8 +134,8 @@ describe('Frog', () => {
         data: {
           transferId: '123e4567-e89b-12d3-a456-426655440000',
           expiresAt: new Date('2000-01-01 00:00Z'),
-          amount: 5234,
-          executionCondition: Buffer.from([1, 28, 0, 0, 0, 0, 7, 84, 212, 192, 14, 103, 46, 117, 115, 46, 110, 101, 120, 117, 115, 46, 98, 111, 98, 3, 4, 16, 119, 119]),
+          amount: '5234',
+          executionCondition: Buffer.from([1, 28, 0, 0, 0, 0, 7, 84, 212, 192, 14, 103, 46, 117, 115, 46, 110, 101, 120, 117, 115, 46, 98, 111, 98, 3, 4, 16, 119, 119]).toString('base64'),
           protocolData: [ {
             protocolName: 'from',
             contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
@@ -170,19 +168,19 @@ describe('Frog', () => {
   })
 
   it('should relay outgoing_fulfill from the plugin', function (done) {
+    const fulfillment = Buffer.from('011c000000000754d4c00e672e75732e6e657875732e626f620304107777', 'hex')
     this.whenFrogSends.push(obj => {
       assert.deepEqual(obj, {
         type: BtpPacket.TYPE_FULFILL,
         requestId: obj.requestId,
         data: {
           transferId: '123e4567-e89b-12d3-a456-426655440000',
-          fulfillment: Buffer.from([1, 28, 0, 0, 0, 0, 7, 84, 212, 192, 14, 103, 46, 117, 115, 46, 110, 101, 120, 117, 115, 46, 98, 111, 98, 3, 4, 16, 119, 119]),
+          fulfillment: fulfillment.toString('base64'),
           protocolData: []
         }
       })
       done()
     })
-    const fulfillment = Buffer.from('011c000000000754d4c00e672e75732e6e657875732e626f620304107777', 'hex')
     this.plugin.handlers.outgoing_fulfill({ id: '123e4567-e89b-12d3-a456-426655440000' }, fulfillment.toString('base64'))
   })
 

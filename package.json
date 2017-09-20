@@ -9,6 +9,7 @@
   "dependencies": {
     "btp-packet": "github:interledgerjs/btp-packet",
     "greenlock": "^2.1.16",
+    "uuid": "^3.1.0",
     "ws": "^3.1.0"
   },
   "repository": {

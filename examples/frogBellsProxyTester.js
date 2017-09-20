@@ -14,24 +14,22 @@ const spider = new BtpSpider({
   spider.send({
     type: BtpPacket.TYPE_MESSAGE,
     requestId: 1,
-    data: {
-      protocolData: [ {
-        protocolName: 'ilp',
-        contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
-        data: IlpPacket.serializeIlqpByDestinationRequest({
-          destinationAccount: 'de.eur.blue.bob',
-          destinationAmount: '9000000000',
-          destinationHoldDuration: 3000
-        })
-      }, {
-        protocolName: 'to',
-        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-        data: Buffer.from('us.usd.red.connie', 'ascii')
-      } ]
-    }
+    data: [ {
+      protocolName: 'ilp',
+      contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+      data: IlpPacket.serializeIlqpByDestinationRequest({
+        destinationAccount: 'de.eur.blue.bob',
+        destinationAmount: '9000000000',
+        destinationHoldDuration: 3000
+      })
+    }, {
+      protocolName: 'to',
+      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+      data: Buffer.from('us.usd.red.connie', 'ascii')
+    } ]
   }, peerId)
 }, (obj, peerId) => {
-  console.log('Got message back from Spider', BtpCat(obj))
+  console.log('Got message back from Spider', BtpCat(obj, BtpPacket.BTP_VERSION_ALPHA))
   spider.stop()
 })
 

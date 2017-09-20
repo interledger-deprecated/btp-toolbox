@@ -12,7 +12,7 @@ BtpPacket.isRequest = (type) => {
   return ([BtpPacket.TYPE_MESSAGE, BtpPacket.TYPE_PREPARE, BtpPacket.TYPE_FULFILL, BtpPacket.TYPE_REJECT].indexOf(type) !== -1)
 }
 
-const BTP_VERSION = BtpPacket.BTP_VERSION_1
+const BTP_VERSION = BtpPacket.BTP_VERSION_ALPHA
 const WELCOME_TEXT = 'This is a BTP server, please upgrade to WebSockets.'
 const LE_ROOT = '~/letsencrypt'
 const HTTP_REDIRECT_PORT = 80

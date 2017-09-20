@@ -50,21 +50,36 @@ function fieldsToEvalStrs (obj) {
   return ret
 }
 
-module.exports = function (obj, btpVersion) {
+module.exports = function (obj, btpVersion = BtpPacket.BTP_VERSION_ALPHA) {
   const typeStrMap = {
-    1: 'BtpPacket.TYPE_RESPONSE',
-    2: 'BtpPacket.TYPE_ERROR',
-    3: 'BtpPacket.TYPE_PREPARE',
-    4: 'BtpPacket.TYPE_FULFILL',
-    5: 'BtpPacket.TYPE_REJECT',
-    6: 'BtpPacket.TYPE_MESSAGE'
+    0: 'BtpPacket.TYPE_ACK + 1',
+    1: 'BtpPacket.TYPE_RESPONSE + 1',
+    2: 'BtpPacket.TYPE_ERROR + 1',
+    3: 'BtpPacket.TYPE_PREPARE + 1',
+    4: 'BtpPacket.TYPE_FULFILL + 1',
+    5: 'BtpPacket.TYPE_REJECT + 1',
+    6: 'BtpPacket.TYPE_MESSAGE + 1'
   }
+  let packetType = obj.type
+  let dataStr
+
+  if (btpVersion === BtpPacket.BTP_VERSION_ALPHA) {
+    packetType -= 1
+    if ([BtpPacket.TYPE_ACK, BtpPacket.TYPE_RESPONSE, BtpPacket.TYPE_MESSAGE].indexOf(packetType) !== -1) {
+      dataStr = protocolDataToEvalStr(obj.data)
+    }
+  }
+
+  if (!dataStr) {
+    dataStr = `{\n` +
+      `    ${fieldsToEvalStrs(obj.data).join(',\n    ')}\n` +
+      `    protocolData: ${protocolDataToEvalStr(obj.data.protocolData)}\n` +
+      `  }`
+  }
+
   return `{ \n` +
-    `  type: ${typeStrMap[obj.type]}, \n` +
+    `  type: ${typeStrMap[packetType]}, \n` +
     `  requestId: ${obj.requestId}, \n` +
-    `  data: {\n` +
-    `    ${fieldsToEvalStrs(obj.data).join(',\n    ')}\n` +
-    `    protocolData: ${protocolDataToEvalStr(obj.data.protocolData)}\n` +
-    `  }\n` +
+    `  data: ${dataStr}\n` +
     `}\n`
 }

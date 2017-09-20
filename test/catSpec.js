@@ -43,57 +43,53 @@ exports = `
 
   it('should give an eval-able string for an ILQP request over BTP message', function () {
     const obj = {
-      type: BtpPacket.TYPE_MESSAGE,
+      type: BtpPacket.TYPE_MESSAGE + 1,
       requestId: 4,
-      data: {
-        protocolData: [ {
-          protocolName: 'ilp',
-          contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
-          data: IlpPacket.serializeIlpPacket({
-            type: 6,
-            typeString: 'ilqp_by_destination_request',
-            data: {
-              destinationAccount: 'de.eur.blue.bob',
-              destinationAmount: '9000000000',
-              destinationHoldDuration: 3000
-            }
-          })
-        }, {
-          protocolName: 'to',
-          contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-          data: 'us.usd.red.connie'
-        } ]
-      }
+      data: [ {
+        protocolName: 'ilp',
+        contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
+        data: IlpPacket.serializeIlpPacket({
+          type: 6,
+          typeString: 'ilqp_by_destination_request',
+          data: {
+            destinationAccount: 'de.eur.blue.bob',
+            destinationAmount: '9000000000',
+            destinationHoldDuration: 3000
+          }
+        })
+      }, {
+        protocolName: 'to',
+        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+        data: 'us.usd.red.connie'
+      } ]
     }
     assert.deepEqual(eval(this.prefix + btpCat(obj)), obj) // eslint-disable-line no-eval
   })
 
   it('should give an eval-able string for an ILQP response over BTP response', function () {
     const obj = {
-      type: BtpPacket.TYPE_RESPONSE,
+      type: BtpPacket.TYPE_RESPONSE + 1,
       requestId: 4,
-      data: {
-        protocolData: [ {
-          protocolName: 'from',
-          contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-          data: 'us.usd.red.connie'
-        }, {
-          protocolName: 'to',
-          contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-          data: 'us.usd.red.alice'
-        }, {
-          protocolName: 'ilp',
-          contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
-          data: IlpPacket.serializeIlpPacket({
-            'type': 7,
-            'typeString': 'ilqp_by_destination_response',
-            'data': {
-              'sourceAmount': '10782788022',
-              'sourceHoldDuration': 5000
-            }
-          })
-        } ]
-      }
+      data: [ {
+        protocolName: 'from',
+        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+        data: 'us.usd.red.connie'
+      }, {
+        protocolName: 'to',
+        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+        data: 'us.usd.red.alice'
+      }, {
+        protocolName: 'ilp',
+        contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
+        data: IlpPacket.serializeIlpPacket({
+          'type': 7,
+          'typeString': 'ilqp_by_destination_response',
+          'data': {
+            'sourceAmount': '10782788022',
+            'sourceHoldDuration': 5000
+          }
+        })
+      } ]
     }
     assert.deepEqual(eval(this.prefix + btpCat(obj)), obj) // eslint-disable-line no-eval
   })

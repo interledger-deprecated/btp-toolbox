@@ -10,7 +10,7 @@ const plugin = new PluginBells({
 })
 
 const frog = new BtpFrog(plugin, (obj) => {
-  console.log('Response from Frog:', BtpCat(obj))
+  console.log('Response from Frog:', BtpCat(obj, BtpPacket.BTP_VERSION_ALPHA))
   frog.stop()
 })
 
@@ -18,22 +18,20 @@ frog.start().then(() => {
   const request = {
     type: BtpPacket.TYPE_MESSAGE,
     requestId: 1,
-    data: {
-      protocolData: [ {
-        protocolName: 'ilp',
-        contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
-        data: IlpPacket.serializeIlqpByDestinationRequest({
-          destinationAccount: 'de.eur.blue.bob',
-          destinationAmount: '9000000000',
-          destinationHoldDuration: 3000
-        })
-      }, {
-        protocolName: 'to',
-        contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-        data: Buffer.from('us.usd.red.connie', 'ascii')
-      } ]
-    }
+    data: [ {
+      protocolName: 'ilp',
+      contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+      data: IlpPacket.serializeIlqpByDestinationRequest({
+        destinationAccount: 'de.eur.blue.bob',
+        destinationAmount: '9000000000',
+        destinationHoldDuration: 3000
+      })
+    }, {
+      protocolName: 'to',
+      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+      data: Buffer.from('us.usd.red.connie', 'ascii')
+    } ]
   }
-  console.log('Request to Frog:', BtpCat(request))
+  console.log('Request to Frog:', BtpCat(request, BtpPacket.BTP_VERSION_ALPHA))
   return frog.handleMessage(request)
 })

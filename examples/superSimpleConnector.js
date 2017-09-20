@@ -9,7 +9,7 @@ const spider = new BtpSpider({ listen: 8000 }, (peerId) => {
   console.log('conn', peerId)
   peers.push(peerId)
 }, (obj, peerId) => {
-  console.log('msg', BtpCat(obj), peerId)
+  console.log('msg', BtpCat(obj, BtpPacket.BTP_VERSION_ALPHA), peerId)
   if (peers.length !== 2) {
     console.error('one-to-one connector needs exactly two peers')
     return
@@ -35,7 +35,7 @@ const client1 = new BtpSpider({
 }, (peerId) => {
   console.log(`connected to ${peerId}`)
 }, (obj, peerId) => {
-  console.log(`client 1 sees BTP packet from ${peerId}`, BtpCat(obj))
+  console.log(`client 1 sees BTP packet from ${peerId}`, BtpCat(obj, BtpPacket.BTP_VERSION_ALPHA))
 })
 
 const client2 = new BtpSpider({
@@ -49,7 +49,7 @@ const client2 = new BtpSpider({
 }, (peerId) => {
   console.log(`connected to ${peerId}`)
 }, (obj, peerId) => {
-  console.log(`client 2 sees BTP packet from ${peerId}`, BtpCat(obj))
+  console.log(`client 2 sees BTP packet from ${peerId}`, BtpCat(obj, BtpPacket.BTP_VERSION_ALPHA))
 })
 
 spider.start().then(() => {
@@ -62,7 +62,7 @@ spider.start().then(() => {
     requestId: 1,
     data: {
       transferId: '6c84fb90-12c4-11e1-840d-7b25c5ee775a',
-      amount: 123,
+      amount: '123',
       expiresAt: new Date().getTime(),
       executionCondition: crypto.randomBytes(32).toString('base64'),
       protocolData: []
