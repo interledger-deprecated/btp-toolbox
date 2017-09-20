@@ -1,0 +1,35 @@
+{
+  "name": "btp-toolbox",
+  "version": "1.0.0",
+  "description": "Tools for building and debugging with the Bilateral Transport Protocol (BTP)",
+  "scripts": {
+    "test": "istanbul test -- _mocha",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "btp-packet": "github:interledgerjs/btp-packet",
+    "greenlock": "^2.1.16",
+    "ws": "^3.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interledgerjs/btp-toolbox.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/interledgerjs/btp-toolbox/issues"
+  },
+  "homepage": "https://github.com/interledgerjs/btp-toolbox#readme",
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.5.0",
+    "eslint": "^4.2.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1"
+  }
+}
