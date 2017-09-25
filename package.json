@@ -2,6 +2,7 @@
   "name": "btp-toolbox",
   "version": "1.0.0",
   "description": "Tools for building and debugging with the Bilateral Transport Protocol (BTP)",
+  "main": "src/index.js",
   "scripts": {
     "test": "istanbul test -- _mocha",
     "lint": "eslint ."
