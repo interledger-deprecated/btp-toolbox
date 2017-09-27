@@ -389,7 +389,7 @@ Frog.prototype = {
           break
 
         case BtpPacket.TYPE_PREPARE:
-          let to = this.plugin.getInfo().prefix + 'peer'
+          let to = this.plugin.getInfo().connectors[0]
           if (protocolDataAsObj.to) {
             to = protocolDataAsObj.to.data.toString('ascii') // String in LPI, Buffer in BTP
           }
