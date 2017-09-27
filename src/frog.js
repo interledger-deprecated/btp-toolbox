@@ -389,10 +389,14 @@ Frog.prototype = {
           break
 
         case BtpPacket.TYPE_PREPARE:
+          let to = this.plugin.getInfo().prefix + 'peer'
+          if (protocolDataAsObj.to) {
+            to = protocolDataAsObj.to.data.toString('ascii') // String in LPI, Buffer in BTP
+          }
           const lpiTransfer = {
             id: obj.data.transferId.toString(), // String in LPI, Number in BTP
             from: this.plugin.getAccount(), // String
-            to: protocolDataAsObj.to.data.toString('ascii'), // String in LPI, Buffer in BTP
+            to,
             ledger: this.plugin.getInfo().prefix, // String
             amount: obj.data.amount, // String in both objects
             ilp: protocolDataAsObj.ilp.data.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), // Base64 in LPI, Buffer in BTP
