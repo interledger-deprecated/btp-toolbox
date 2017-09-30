@@ -414,6 +414,7 @@ Frog.prototype = {
               })
             }, err => {
               console.error(err)
+              console.log('sendTransfer rejected its promise, putting ERROR on BTP')
               this.send({
                 type: BtpPacket.TYPE_ERROR,
                 requestId: obj.requestId,
@@ -424,6 +425,7 @@ Frog.prototype = {
               })
             })
           } catch (e) {
+            console.log('sendTransfer should not throw!', e)
             console.error(e)
           }
           break
