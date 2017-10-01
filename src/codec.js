@@ -297,9 +297,9 @@ class Codec {
         case BtpPacket.TYPE_PREPARE:
           emit('incoming_prepare', {
             id: obj.data.transferId.toString(), // String in LPI, Number in BTP
-            from: this.plugin.getAccount(), // String
-            to,
-            ledger: this.plugin.getInfo().prefix, // String
+            // from: this.plugin.getAccount(), // String
+            to: protocolDataAsObj.to.data.toString('utf8'),
+            // ledger: this.plugin.getInfo().prefix, // String
             amount: obj.data.amount, // String in both objects
             ilp: protocolDataAsObj.ilp.data.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), // Base64 in LPI, Buffer in BTP
             noteToSelf: {},
