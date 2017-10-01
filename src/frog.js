@@ -181,8 +181,12 @@ Frog.prototype = {
       }
     })
     this.plugin.registerRequestHandler((request) => {
+      // For now, we just ignore request.id, as it's a ledger-level message id which is
+      // unrelated to the id of the response, and unrelated to the BTP requestId
+      // TODO: deduplicate these incoming events from the ledger, based on request.id
+      const btpRequestId = generateRequestId()
       const promise = new Promise((resolve, reject) => {
-        this.requestsReceived[request.id] = {
+        this.requestsReceived[btpRequestId] = {
           resolve (responseData) { // should be used both for BTP Response and BTP Error!
             resolve({
               id: uuid(), // in LPI, both messages involved in a request get their own message id
@@ -198,7 +202,7 @@ Frog.prototype = {
       })
       this.send({
         type: BtpPacket.TYPE_MESSAGE,
-        requestId: request.id,
+        requestId: btpRequestId,
         data: MakeProtocolData(request)
       })
       return promise
