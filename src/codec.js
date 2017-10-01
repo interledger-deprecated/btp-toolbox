@@ -41,12 +41,31 @@ function MakeProtocolData (obj) {
       contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
       data: Buffer.from(obj.ilp, 'base64')
     })
-  } else {
-    protocolData.push({
-      protocolName: 'ccp',
-      contentType: BtpPacket.MIME_APPLICATION_JSON,
-      data: Buffer.from(JSON.stringify(obj.custom), 'ascii')
-    })
+  }
+  if (obj.custom) {
+    for (let protocolName in obj.custom) {
+      if (protocolName === 'vouch') {
+        protocolData.push({
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+          data: Buffer.from(obj.custom[protocolName], 'base64')
+        })
+      } else if (['info', 'balance'].indexOf(protocolName) !== -1) {
+        protocolData.push({
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+          data: obj.custom[protocolName]
+        })
+        console.log('info or balance', protocolData)
+      } else {
+        console.log('pushing protocol from Message.custom:', protocolName, obj.custom[protocolName])
+        protocolData.push({
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_JSON,
+          data: Buffer.from(JSON.stringify(obj.custom[protocolName]), 'ascii')
+        })
+      }
+    }
   }
   return protocolData
 }
@@ -65,6 +84,7 @@ function lpiErrorToBtpError (err, whileFulfilling = false) {
   }
 
   function makeError (name) {
+    console.log('making error!', name)
     let err = new Error(messageAndCode[name].message)
     err.code = messageAndCode[name].code
     err.name = name
@@ -125,7 +145,7 @@ function btpErrorToLpiError (err) {
     err.name = name
     return err
   }
-
+  console.log('btpErrorToLpiError', err)
   switch (err.name) {
     // errors with one-to-one mapping:
     case 'UnreachableError': return makeError(err.name)
@@ -192,11 +212,17 @@ class Codec {
         }
       }
       case 'request': {
-        const obj = eventArgs[0]
+        const request = eventArgs[0]
+        console.log('request event, looking at LPI Message object', request)
+        // For now, we just ignore request.id, as it's a ledger-level message id which is
+        // unrelated to the id of the response, and unrelated to the BTP requestId
+        // TODO: deduplicate these incoming events from the ledger, based on request.id
+        console.log('codec toBtp sees request', request)
+        const btpRequestId = generateRequestId()
         return {
           type: BtpPacket.TYPE_MESSAGE,
-          requestId: obj.id,
-          data: MakeProtocolData(obj)
+          requestId: btpRequestId,
+          data: MakeProtocolData(request)
         }
       }
       case 'response': {
@@ -210,7 +236,43 @@ class Codec {
     }
   }
 
-  fromBtp(obj) {
+  fromBtpToPromise(obj, promise) {
+    console.log('to promise!', obj, BtpPacket.TYPE_ACK, BtpPacket.TYPE_RESPONSE, BtpPacket.TYPE_ERROR)
+    switch (obj.type) {
+      case BtpPacket.TYPE_ACK:
+        console.log('it is an ack')
+        promise.resolve(null)
+        break
+      case BtpPacket.TYPE_RESPONSE:
+        console.log('it is a response')
+        let responseData = null
+        if (obj.data.length) {
+          switch (obj.data[0].contentType) {
+            case BtpPacket.MIME_APPLICATION_OCTET_STREAM:
+              responseData = obj.data[0].data.toString('base64')
+              break
+            case BtpPacket.MIME_TEXT_PLAIN_UTF8:
+              responseData = obj.data[0].data.toString('utf8')
+              break
+            case BtpPacket.MIME_APPLICATION_JSON:
+              try {
+                responseData = JSON.parse(obj.data[0].data.toString('utf8'))
+              } catch(e) {
+                responseData = { unparseable: obj.data[0].data.toString('utf8') }
+              }
+              break
+          }
+        }
+        console.log('parsed responseData', obj.data, responseData)
+        promise.resolve(responseData)
+        break
+      case BtpPacket.TYPE_ERROR:
+        console.log('it is an error')
+        promise.reject(new Error(btpErrorToLpiError(obj.data.rejectionReason)))
+    }
+  }
+
+  fromBtpToEvent(obj, emit) {
     try {
       let protocolDataAsObj = {}
       let protocolDataAsArr
@@ -232,14 +294,8 @@ class Codec {
       }
 
       switch (obj.type) {
-        case BtpPacket.TYPE_ACK:
-          return { eventType: 'response', eventArgs: [ {} ] }
-        case BtpPacket.TYPE_RESPONSE:
-          return { eventType: 'response', eventArgs: [ primaryData ] }
-        case BtpPacket.TYPE_ERROR:
-          return { eventType: 'response', eventArgs: [ obj.data.rejectionReason ] }
         case BtpPacket.TYPE_PREPARE:
-          return { eventType: 'prepare', eventArgs: [ {
+          emit('incoming_prepare', {
             id: obj.data.transferId.toString(), // String in LPI, Number in BTP
             from: this.plugin.getAccount(), // String
             to,
@@ -250,24 +306,21 @@ class Codec {
             executionCondition: obj.data.executionCondition, // Base64 in both
             expiresAt: obj.data.expiresAt.toISOString(), // String in LPI, DateTime in BTP
             custom: {}
-          } ] }
+          })
+          break
         case BtpPacket.TYPE_FULFILL:
-          return { eventType: 'fulfill', eventArgs: [
-            { id: obj.data.transferId.toString() },
-            obj.data.fulfillment
-          ] }
+          emit('outgoing_fulfill', { id: obj.data.transferId.toString() }, obj.data.fulfillment)
+          break
         case BtpPacket.TYPE_REJECT:
           // transferId String in both LPI and BTP
           // rejectionReason Buffer in BTP but Object in LPI! 
           const btpErrorObj = IlpPacket.deserializeIlpError(obj.data.rejectionReason)
           const lpiErrorThrowable = btpErrorToLpiError(btpErrorObj)
           const lpiRejectionMessage = lpiErrorToRejectionMessage(lpiErrorThrowable, this.plugin.getAccount())
-          return { eventType: 'reject', eventArgs: [
-            { id: obj.data.transferId.toString() },
-            lpiRejectionMessage
-          ] }
+          emit('outgoing_reject', { id: obj.data.transferId.toString() }, lpiRejectionMessage)
+          break
         case BtpPacket.TYPE_MESSAGE:
-          return { eventType: 'request', eventArgs: [ primaryData ] }
+          emit('incoming_request', primaryData)
       }
     } catch (err) {
       console.error(err)

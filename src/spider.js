@@ -13,6 +13,7 @@ BtpPacket.isRequest = (type) => {
 }
 
 const BTP_VERSION = BtpPacket.BTP_VERSION_ALPHA
+console.log('btp version hardwired', BtpPacket)
 const WELCOME_TEXT = 'This is a BTP server, please upgrade to WebSockets.'
 const LE_ROOT = '~/letsencrypt'
 const HTTP_REDIRECT_PORT = 80
@@ -123,6 +124,7 @@ BtpSpider.prototype = {
           }
           ws.on('message', (msg) => {
             const obj = BtpPacket.deserialize(msg, BTP_VERSION)
+            console.log('server deserialized', msg, obj)
             if (!BtpPacket.isRequest(obj.type)) {
               delete this.peers[peerId].unanswered[obj.requestId]
             }
@@ -179,6 +181,7 @@ BtpSpider.prototype = {
     return this.connectToUpstreamRetry(peerId).then(ws => {
       ws.on('message', (msg) => {
         const obj = BtpPacket.deserialize(msg, BTP_VERSION)
+        console.log('client deserialized', msg, obj)
         if (!BtpPacket.isRequest(obj.type)) {
           delete this.peers[peerId].unanswered[obj.requestId]
         }
@@ -244,6 +247,7 @@ BtpSpider.prototype = {
   },
 
   send (obj, peerId) {
+    console.log('spider sends', { obj, peerId, BTP_VERSION })
     return Promise.resolve().then(() => {
       const msg = BtpPacket.serialize(obj, BTP_VERSION)
       if (this.peers[peerId]) {
