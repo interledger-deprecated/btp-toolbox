@@ -4,13 +4,13 @@ const crypto = require('crypto')
 const uuid = require('uuid/v4')
 
 const lpiVersion = {
-  17q3: 5, // See https://interledger.org/rfcs/0004-ledger-plugin-interface/draft-5.html
-  17q4: 7 // See https://interledger.org/rfcs/0004-ledger-plugin-interface/draft-7.html
+  '17q3': 5, // See https://interledger.org/rfcs/0004-ledger-plugin-interface/draft-5.html
+  '17q4': 7 // See https://interledger.org/rfcs/0004-ledger-plugin-interface/draft-7.html
 }
 
 const btpVersion = {
-  17q3: 0, // BtpPacket.BTP_VERSION_ALPHA, see https://github.com/interledger/rfcs/blob/8b65d63e3aeaadeeb40ca5d2c86722eadf11ab77/asn1/CommonLedgerProtocol.asn
-  17q4: 1  // BtpPacket.BTP_VERSION_1, see https://github.com/interledger/rfcs/pull/300
+  '17q3': 0, // BtpPacket.BTP_VERSION_ALPHA, see https://github.com/interledger/rfcs/blob/8b65d63e3aeaadeeb40ca5d2c86722eadf11ab77/asn1/CommonLedgerProtocol.asn
+  '17q4': 1  // BtpPacket.BTP_VERSION_1, see https://github.com/interledger/rfcs/pull/300
 }
 
 function generateRequestId () {
