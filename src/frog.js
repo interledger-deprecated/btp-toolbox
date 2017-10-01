@@ -10,6 +10,7 @@ function generateRequestId () {
 }
 
 function MakeProtocolData (obj) {
+  console.log('making protocol data', obj)
   let protocolData = []
   if (obj.from) {
     protocolData.push({
@@ -31,12 +32,23 @@ function MakeProtocolData (obj) {
       contentType: BtpPacket.MIME_APPLICATION_OCTET_STRING,
       data: Buffer.from(obj.ilp, 'base64')
     })
-  } else {
-    protocolData.push({
-      protocolName: 'ccp',
-      contentType: BtpPacket.MIME_APPLICATION_JSON,
-      data: Buffer.from(JSON.stringify(obj.custom), 'ascii')
-    })
+  }
+  if (obj.custom) {
+    for (let protocolName in obj.custom) {
+      if (protocolName === 'vouch') {
+        protocolData.push({
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
+          data: Buffer.from(obj.custom[protocolName], 'base64')
+        })
+      } else {
+        protocolData.push({
+          protocolName,
+          contentType: BtpPacket.MIME_APPLICATION_JSON,
+          data: Buffer.from(JSON.stringify(obj.custom[protocolName]), 'ascii')
+        })
+      }
+    }
   }
   return protocolData
 }
@@ -164,6 +176,7 @@ Frog.prototype = {
   },
   registerPluginEventHandlers () {
     this.plugin.on('incoming_prepare', (transfer) => {
+      console.log('frog incoming prepare!', transfer)
       try {
         this.send({
           type: BtpPacket.TYPE_PREPARE,
@@ -184,6 +197,7 @@ Frog.prototype = {
       // For now, we just ignore request.id, as it's a ledger-level message id which is
       // unrelated to the id of the response, and unrelated to the BTP requestId
       // TODO: deduplicate these incoming events from the ledger, based on request.id
+      console.log('frog sees request', request)
       const btpRequestId = generateRequestId()
       const promise = new Promise((resolve, reject) => {
         this.requestsReceived[btpRequestId] = {
@@ -208,6 +222,7 @@ Frog.prototype = {
       return promise
     })
     this.plugin.on('outgoing_fulfill', (transfer, fulfillment) => {
+      console.log('serializing fulfillment', transfer, fulfillment)
       try {
         this.send({
           type: BtpPacket.TYPE_FULFILL,
@@ -455,7 +470,7 @@ Frog.prototype = {
 
         case BtpPacket.TYPE_REJECT:
           // transferId String in both LPI and BTP
-          // rejectionReason Buffer in BTP but Object in LPI! 
+          // rejectionReason Buffer in BTP but Object in LPI!
           const btpErrorObj = IlpPacket.deserializeIlpError(obj.data.rejectionReason)
           const lpiErrorThrowable = btpErrorToLpiError(btpErrorObj)
           const lpiRejectionMessage = lpiErrorToRejectionMessage(lpiErrorThrowable, this.plugin.getAccount())
