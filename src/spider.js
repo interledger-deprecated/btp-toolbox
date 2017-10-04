@@ -13,7 +13,6 @@ BtpPacket.isRequest = (type) => {
 }
 
 const BTP_VERSION = BtpPacket.BTP_VERSION_ALPHA
-console.log('btp version hardwired', BtpPacket)
 const WELCOME_TEXT = 'This is a BTP server, please upgrade to WebSockets.'
 const LE_ROOT = '~/letsencrypt'
 const HTTP_REDIRECT_PORT = 80

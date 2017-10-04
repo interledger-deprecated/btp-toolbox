@@ -2,6 +2,7 @@ const BtpPacket = require('btp-packet')
 const IlpPacket = require('ilp-packet')
 const crypto = require('crypto')
 const uuid = require('uuid/v4')
+function base64url (buf) { return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') }
 
 const lpiVersion = {
   '17q3': 5, // See https://interledger.org/rfcs/0004-ledger-plugin-interface/draft-5.html
@@ -56,9 +57,7 @@ function MakeProtocolData (obj) {
           contentType: BtpPacket.MIME_APPLICATION_OCTET_STREAM,
           data: obj.custom[protocolName]
         })
-        console.log('info or balance', protocolData)
       } else {
-        console.log('pushing protocol from Message.custom:', protocolName, obj.custom[protocolName])
         protocolData.push({
           protocolName,
           contentType: BtpPacket.MIME_APPLICATION_JSON,
@@ -84,7 +83,6 @@ function lpiErrorToBtpError (err, whileFulfilling = false) {
   }
 
   function makeError (name) {
-    console.log('making error!', name)
     let err = new Error(messageAndCode[name].message)
     err.code = messageAndCode[name].code
     err.name = name
@@ -145,7 +143,6 @@ function btpErrorToLpiError (err) {
     err.name = name
     return err
   }
-  console.log('btpErrorToLpiError', err)
   switch (err.name) {
     // errors with one-to-one mapping:
     case 'UnreachableError': return makeError(err.name)
@@ -166,13 +163,11 @@ function btpErrorToLpiError (err) {
 
 class Codec {
   constructor (testnetVersion) {
-    console.log('constructing codec!', testnetVersion)
     this.lpiVersion = lpiVersion[testnetVersion]
     this.btpVersion = btpVersion[testnetVersion]
   }
 
   toBtp (eventType, eventArgs) {
-    console.log('codec toBtp!', eventType, eventArgs)
     switch (eventType) {
       case 'prepare': {
         const transfer = eventArgs[0]
@@ -213,11 +208,9 @@ class Codec {
       }
       case 'request': {
         const request = eventArgs[0]
-        console.log('request event, looking at LPI Message object', request)
         // For now, we just ignore request.id, as it's a ledger-level message id which is
         // unrelated to the id of the response, and unrelated to the BTP requestId
         // TODO: deduplicate these incoming events from the ledger, based on request.id
-        console.log('codec toBtp sees request', request)
         const btpRequestId = generateRequestId()
         return {
           type: BtpPacket.TYPE_MESSAGE,
@@ -237,14 +230,11 @@ class Codec {
   }
 
   fromBtpToPromise(obj, promise) {
-    console.log('to promise!', obj, BtpPacket.TYPE_ACK, BtpPacket.TYPE_RESPONSE, BtpPacket.TYPE_ERROR)
     switch (obj.type) {
       case BtpPacket.TYPE_ACK:
-        console.log('it is an ack')
         promise.resolve(null)
         break
       case BtpPacket.TYPE_RESPONSE:
-        console.log('it is a response')
         let responseData = null
         if (obj.data.length) {
           switch (obj.data[0].contentType) {
@@ -252,7 +242,7 @@ class Codec {
               responseData = obj.data[0].data.toString('base64')
               break
             case BtpPacket.MIME_TEXT_PLAIN_UTF8:
-              responseData = obj.data[0].data.toString('utf8')
+              responseData = base64url(obj.data[0].data)
               break
             case BtpPacket.MIME_APPLICATION_JSON:
               try {
@@ -263,11 +253,9 @@ class Codec {
               break
           }
         }
-        console.log('parsed responseData', obj.data, responseData)
         promise.resolve(responseData)
         break
       case BtpPacket.TYPE_ERROR:
-        console.log('it is an error')
         promise.reject(new Error(btpErrorToLpiError(obj.data.rejectionReason)))
     }
   }

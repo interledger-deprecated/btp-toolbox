@@ -10,7 +10,6 @@ function generateRequestId () {
 }
 
 function MakeProtocolData (obj) {
-  console.log('making protocol data', obj)
   let protocolData = []
   if (obj.from) {
     protocolData.push({
@@ -176,7 +175,6 @@ Frog.prototype = {
   },
   registerPluginEventHandlers () {
     this.plugin.on('incoming_prepare', (transfer) => {
-      console.log('frog incoming prepare!', transfer)
       try {
         this.send({
           type: BtpPacket.TYPE_PREPARE,
@@ -197,7 +195,6 @@ Frog.prototype = {
       // For now, we just ignore request.id, as it's a ledger-level message id which is
       // unrelated to the id of the response, and unrelated to the BTP requestId
       // TODO: deduplicate these incoming events from the ledger, based on request.id
-      console.log('frog sees request', request)
       const btpRequestId = generateRequestId()
       const promise = new Promise((resolve, reject) => {
         this.requestsReceived[btpRequestId] = {
@@ -222,7 +219,6 @@ Frog.prototype = {
       return promise
     })
     this.plugin.on('outgoing_fulfill', (transfer, fulfillment) => {
-      console.log('serializing fulfillment', transfer, fulfillment)
       try {
         this.send({
           type: BtpPacket.TYPE_FULFILL,
@@ -433,7 +429,6 @@ Frog.prototype = {
               })
             }, err => {
               console.error(err)
-              console.log('sendTransfer rejected its promise, putting ERROR on BTP')
               this.send({
                 type: BtpPacket.TYPE_ERROR,
                 requestId: obj.requestId,
@@ -444,7 +439,6 @@ Frog.prototype = {
               })
             })
           } catch (e) {
-            console.log('sendTransfer should not throw!', e)
             console.error(e)
           }
           break
