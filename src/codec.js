@@ -22,20 +22,6 @@ function generateRequestId () {
 
 function MakeProtocolData (obj) {
   let protocolData = []
-  if (obj.from) {
-    protocolData.push({
-      protocolName: 'from',
-      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-      data: Buffer.from(obj.from, 'ascii')
-    })
-  }
-  if (obj.to) {
-    protocolData.push({
-      protocolName: 'to',
-      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
-      data: Buffer.from(obj.to, 'ascii')
-    })
-  }
   if (obj.ilp) {
     protocolData.push({
       protocolName: 'ilp',
@@ -65,6 +51,20 @@ function MakeProtocolData (obj) {
         })
       }
     }
+  }
+  if (obj.from) {
+    protocolData.push({
+      protocolName: 'from',
+      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+      data: Buffer.from(obj.from, 'ascii')
+    })
+  }
+  if (obj.to) {
+    protocolData.push({
+      protocolName: 'to',
+      contentType: BtpPacket.MIME_TEXT_PLAIN_UTF8,
+      data: Buffer.from(obj.to, 'ascii')
+    })
   }
   return protocolData
 }
