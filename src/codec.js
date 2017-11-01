@@ -239,10 +239,10 @@ class Codec {
         if (obj.data.length) {
           switch (obj.data[0].contentType) {
             case BtpPacket.MIME_APPLICATION_OCTET_STREAM:
-              responseData = obj.data[0].data.toString('base64')
+              responseData = base64url(obj.data[0].data)
               break
             case BtpPacket.MIME_TEXT_PLAIN_UTF8:
-              responseData = base64url(obj.data[0].data)
+              responseData = obj.data[0].data.toString('utf8')
               break
             case BtpPacket.MIME_APPLICATION_JSON:
               try {
